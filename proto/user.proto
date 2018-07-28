@@ -1,0 +1,44 @@
+syntax = "proto3";
+package proto;
+
+message user {
+	string account = 33;
+	string avatar = 6;
+	int64 birthcityid = 16;
+	int64 birthday = 15;
+	string buildingid = 40;
+	string building = 39;
+	int64 carriercityid = 28;
+	int32 carrier = 27;
+	string code = 35;
+	string coverurl = 17;
+	int64 departmentid = 12;
+	string department = 13;
+	string did = 26;
+	string dormid = 42;
+	string dorm = 41;
+	int64 fid2 = 37;
+	int64 fid = 36;
+	int32 followversion = 19;
+	int32 gender = 7;
+	int64 id = 3;
+	bool issilence = 38;
+	string mobile = 25;
+	string name = 5;
+	string password = 34;
+	int64 privilege = 21;
+	string response = 2;
+	string rolename = 24;
+	int64 role = 23;
+	int64 schoolid = 10;
+	string school = 11;
+	string signature = 18;
+	int32 status = 1;
+	int64 time = 29;
+	//userstats = 20;
+	string uuid = 4;
+	int32 verifystate = 8;
+	string verifytitle = 9;
+	string wifiurl = 22;
+	int64 year = 14;
+}

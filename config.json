@@ -1,0 +1,52 @@
+{
+  "init": 0,
+  "login_url": "https://cps.loocha.cn:9607/anony/login?1={p[cv]}&server_did={p[server_did]}&pubc=0&vv={p[vv]}&mm={p[model]}&sv={p[sv]}&imsi={p[imsi]}&rl={p[rl]}&version={p[version]}&auto=1&model={p[model]}",
+  "qr_params": "1={p[cv]}&server_did={p[server_did]}&pubc=0&vv={p[vv]}&mm={p[model]}&sv={p[sv]}&imsi={p[imsi]}&rl={p[rl]}&did={p[did]}&type=4&time={time}&sign={sign}&sysVersion=1&brasip={p[mscgip]}&ulanip={p[wlanuserip]}&wlanip={p[wlanuserip]}&ssid=%40f-Young&mac={p[mac]}&netmask={p[netmask]}&gateway={p[gateway]}&bssid={p[bssid]}&routerIp={p[routerip]}",
+  "pwd_params": "1={p[cv]}&server_did={p[server_did]}&pubc=0&vv={p[vv]}&mm={p[model]}&imsi=none&rl={p[rl]}&did={p[did]}&type=4&wwan=0&wanip={p[wlanuserip]}&time={time}&sign={sign}&sysVersion=1",
+  "oline_params": "1={p[cv]}&server_did={p[server_did]}&pubc=0&vv={p[vv]}&mm={p[model]}&imsi=none&rl={p[rl]}&did={p[did]}&qrcode={qrcode}&code={pwd}&time={time}&sysVersion=1&sign={sign}",
+  "status_params": "1={p[cv]}&server_did={p[server_did]}&pubc=0&vv={p[vv]}&mm={p[model]}&sv={p[sv]}&imsi={p[imsi]}&rl={p[rl]}&did={p[did]}&time={time}&type=7&sysVersion=1&sign={sign}",
+  "kick_params": "1={p[cv]}&server_did={p[server_did]}&pubc=0&vv={p[vv]}&mm={p[model]}&sv={p[sv]}&imsi={p[imsi]}&rl={p[rl]}&did={p[did]}&qrcode={qrcode}&wanip={p[wlanuserip]}&brasip={p[mscgip]}&time={time}&sysVersion=1&sign={sign}",
+  "host": "wifi.loocha.cn",
+  "path":[
+   "/{user_id}/wifi/v3/qrcode",
+   "/{user_id}/wifi/v3/pwd",
+   "/{user_id}/wifi/v3/login",
+   "/{user_id}/wifi/v3/status",
+   "/{user_id}/wifi/v3/kickoff"
+  ],
+  "header": {"User-Agent": "RCloudViewer-Android/5.6.0",
+  "Accept": "application/x-protobuf",
+  "Content-Type": "application/x-protobuf",
+  "App-Sign": "32a3ff9ef61823348ba996c2f5adb394",
+  "Authorization": ""
+  },
+  "params":{
+    "mobile": "",
+    "password": "",
+    "cv": "Android_college_5.6.0",
+    "server_did": "",
+    "pubc": 0,
+    "vv": 5005000,
+    "mm": "Nexus6p",
+    "sv": "6.0_23",
+    "imsi": "none",
+    "model": "Nexus6p",
+    "rl": "1920*1080",
+    "did": "",
+    "version": "Android_college_5.6.0",
+    "type": 0,
+    "time": 0,
+    "sign": "",
+    "sysVersion": 1,
+    "mscgip": "",
+    "wlanuserip": "",
+    "mac": "",
+    "netmask": "",
+    "gateway": "",
+    "bssid": "",
+    "routerip": ""
+
+  },
+  "appSign64": "MIIB7zCCAVigAwIBAgIETilZUTANBgkqhkiG9w0BAQUFADA7MRAwDgYDVQQHEwdOYW5qaW5nMRYwFAYDVQQLEw1jb20ucmVhbGNsb3VkMQ8wDQYDVQQDEwZsb29jaGEwIBcNMTEwNzIyMTEwNDQ5WhgPMzAxMDExMjIxMTA0NDlaMDsxEDAOBgNVBAcTB05hbmppbmcxFjAUBgNVBAsTDWNvbS5yZWFsY2xvdWQxDzANBgNVBAMTBmxvb2NoYTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAvFfnMSk5Ux+Y/A31wqItpBcpDWDeIK+SFee1ztXTa7ZpdRZ5BOCM+rzdBPkjW1h5g2F2NPG5/DeEcyiyvHXimAsDnG3o3FOB4kwv6rhKEDoX06jMwsrDWoZXiKRtFz4NyZcTAgvQr3ovQqvk9GIB6hFQk0a2P3O5Y1b68D9Ro40CAwEAATANBgkqhkiG9w0BAQUFAAOBgQABN1wIUGXZKOnmmJOPXkt7c/i4jLmGh1Qdf3VtOkx8ci6BSZtHSuG15VN3VuHK8z19RmXTwIWr2LqD7yKY1J50TiY1ghZ94QG9Uq0sEZ0fC3zZnKVQcgzeOAyHKU90BqRnq2Zc6MUT4xMreuj8mUwl2aG8h/6oBnyQweCtaIZNkg==",
+  "unsign_str": "app={p[cv]}&mobile={p[mobile]}&model={p[model]}&path={path}&server_did={p[server_did]}&time={time}&type={type}{sub_app_sign}"
+}
