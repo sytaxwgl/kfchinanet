@@ -1,18 +1,21 @@
+# -*- coding: utf-8 -*-
+# @Time    : 2018/7/29 9:18
+# @Author  : sytaxwgl
+
 import re
 import os
 import json
 import time
 import random
+import psutil
 import base64
-import logging
 import hashlib
 import requests
-import subprocess
 from urllib import parse
 from proto import user_pb2
+from ipaddress import IPv4Address
 from pyDes import des, PAD_PKCS5, ECB
 
-#logging.basicConfig(level=logging.INFO)
 with open('config.json', 'r') as f:
     config = json.load(f)
 params = config['params']
@@ -24,27 +27,32 @@ key = ''
 
 def get_net_info(uip):
     '''
-    获取
+    获取网络相关信息
     :param uip:
     :return:
     '''
-    values = ''
-    gw_mac = 'ff-ff-ff-ff-ff-ff'
-    p_res = subprocess.check_output('ipconfig').decode('gbk')
-    p_res = p_res.split('\r\n\r\n')
-    for i in p_res:
-        if i.find(uip) != -1:
-            values = i
-    patt = r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'
-    values = re.findall(patt, values)
+    values = []
+    info = psutil.net_if_addrs()
+    for k, v in info.items():
+        for item in v:
+            if item[0] == 2 and item[1] == uip:
+                values.append(item[2])
+
+    tmp = int(IPv4Address(uip)) & int(IPv4Address(values[0]))
+    gateway = IPv4Address(tmp)
+    gateway = str(IPv4Address(gateway) + 1)
+    values.append(gateway)
+    values.append(gateway)
+
     for line in os.popen('arp -a'):
-        if line.lstrip().startswith(values[2]):
-            s1 = line.split()
-            gw_mac = s1[1]
-    values.append(gw_mac)
-    values.append(values[2])
-    values.pop(0)
-    keys = ['netmask', 'gateway', 'bssid', 'routerip']
+
+        if line.find(gateway) != -1:
+            patt = r'([0-9a-f]{2}[:-]){5}[0-9a-f]{2}'
+            bssid = re.search(patt, line)
+            bssid = '' if bssid is None else bssid.group(0).replace(':', '-')
+
+    values.append(bssid)
+    keys = ['netmask', 'gateway', 'routerip', 'bssid']
     net_info = {k: v for k, v in zip(keys, values)}
     return net_info
 
@@ -66,11 +74,18 @@ def gen_did():
 
 
 def initial():
-
-    if config['init'] == 0:
+    '''
+    初始化config配置信息
+    :return:
+    '''
+    if config['init'] == 0:  # 初始化did,server_did以及帐号和密码
         config['init'] = 1
         ram_did = gen_did()
         params.update(ram_did)
+        account = input('请输入帐号：')
+        pwd = input('请输入密码：')
+        params['mobile'] = account
+        params['password'] = pwd
 
     account = params['mobile'] + ':' + params['password']
     auth = base64.b64encode(account.encode())
@@ -78,21 +93,29 @@ def initial():
 
     net_info = {}
     test_url = 'http://test.f-young.cn'
-    res = requests.get(test_url, allow_redirects=False)
+    try:
+        res = requests.get(test_url, allow_redirects=False)
+    except requests.exceptions.ConnectionError:
+        print("网络连接错误!")
+        exit(0)
     if res.status_code == 200:
         return 1
-    location = parse.urlsplit(res.headers['Location'])
-    net_info = parse.parse_qs(location.query)
-    for k, v in net_info.items():
-        net_info.update({k: v[0]})
-    net_info2 = get_net_info(net_info['wlanuserip'])
-    net_info.update(net_info2)
-    params.update(net_info)
-    config['params'].update(params)
+
+    # 更新网络信息
+    elif res.status_code == 302:
+        location = parse.urlsplit(res.headers['Location'])
+        net_info = parse.parse_qs(location.query)
+        for k, v in net_info.items():
+            net_info.update({k: v[0]})
+        net_info2 = get_net_info(net_info['wlanuserip'])
+        net_info.update(net_info2)
+        params.update(net_info)
+        config['params'].update(params)
+
     with open('config.json', 'w') as f:
         json.dump(config, f, indent=4)
     return 0
-    
+
 
 def des_descrypt(s, kk):
     """
@@ -115,9 +138,6 @@ def login_chinanet():
         res = requests.get(url, headers=header)
     except requests.exceptions.ConnectionError:
         print("网络错误！")
-        return None
-    if res.status_code == 401:
-        print(res.text)
         return None
     if res.status_code != 200:
         print(res.text)
@@ -153,13 +173,13 @@ def get_sub_appsign(appsign, tt):
 
 def get_sign(ipath):
     '''
-    appsign: base64编码的掌大签名
-    raw_str: 待获取md5的字符串
+    :param ipath:
+    :return:
     '''
     global gtt, key
     appsign = config['appSign64']
     raw_str = config['unsign_str']
-    tt = int(time.time()*1000)
+    tt = int(time.time() * 1000)
     gtt = tt
     sub_appsign = get_sub_appsign(appsign, tt)
     key = sub_appsign[0:8]
@@ -230,7 +250,11 @@ def list_devices():
     status_url = 'https://' + config['host'] + path[3] + '?' + config['status_params']
     md5 = get_sign(3)
     status_url = status_url.format(p=params, time=gtt, sign=md5)
-    res = requests.get(status_url, headers=config['header'])
+    try:
+        res = requests.get(status_url, headers=config['header'])
+    except requests.exceptions.ConnectionError:
+        print("网络连接错误!")
+        return None
     if res.status_code != 200:
         return None
     res_text = des_descrypt(res.content, key)
@@ -275,16 +299,17 @@ if __name__ == '__main__':
             result = online(qrcode, pwd)
         elif option == '2':
             dev_list = list_devices()
-            if dev_list is not None:
-                print(dev_list['onlines'])
+            if dev_list is not None and dev_list['onlines'] != []:
+                for dev in dev_list['onlines']:
+                    print('%s, %s' % (dev['device'], dev['time']))
         elif option == '3':
             res = list_devices()
-            onlines = res['onlines']
-            if res is None or onlines == []:
+            if res is None or res['onlines'] == []:
                 continue
+            onlines = res['onlines']
             hiwf = onlines[0]['id']
             res = kick_off(hiwf)
             if res['status'] == '0':
-                print('logout successfully!')
+                print('logout successfully!\n')
         else:
             exit(0)
