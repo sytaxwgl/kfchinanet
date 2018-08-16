@@ -1,5 +1,5 @@
 ## 简介
-kfchinanet是一款python3编写的电信校园网认证工具。如果你所在的地区使用掌上大学app进行网络认证，那么你可以使用这个工具简化上网步骤。
+kfchinanet是由python3编写的电信校园网认证工具。接口来自掌上大学app，你可以使用这个工具简化上网步骤。
 
 
 ## 使用方法：
@@ -14,6 +14,20 @@ pip install psutil requests pyDes protobuf
 ```
 如果你的系统python2和python3共存，请使用pip3代替pip。安装好相关模块之后直接运行kfchinanet.py文件即可。
 
+
+## 示例
+
+- 上线
+
+![上线](https://i.loli.net/2018/08/16/5b75209689da9.png)
+
+- 查询在线设备
+
+![在线设备](https://i.loli.net/2018/08/16/5b752096d4a87.png)
+
+- 下线
+
+![下线](https://i.loli.net/2018/08/16/5b752096d4a87.png)
 
 ## 支持平台
 win10和ubuntu 18.04可以正常使用，mac未测试，不支持使用路由器。

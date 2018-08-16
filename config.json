@@ -1,5 +1,4 @@
 {
-  "init": 0,
   "login_url": "https://cps.loocha.cn:9607/anony/login?1={p[cv]}&server_did={p[server_did]}&pubc=0&vv={p[vv]}&mm={p[model]}&sv={p[sv]}&imsi={p[imsi]}&rl={p[rl]}&version={p[version]}&auto=1&model={p[model]}",
   "qr_params": "1={p[cv]}&server_did={p[server_did]}&pubc=0&vv={p[vv]}&mm={p[model]}&sv={p[sv]}&imsi={p[imsi]}&rl={p[rl]}&did={p[did]}&type=4&time={time}&sign={sign}&sysVersion=1&brasip={p[mscgip]}&ulanip={p[wlanuserip]}&wlanip={p[wlanuserip]}&ssid=%40f-Young&mac={p[mac]}&netmask={p[netmask]}&gateway={p[gateway]}&bssid={p[bssid]}&routerIp={p[routerip]}",
   "pwd_params": "1={p[cv]}&server_did={p[server_did]}&pubc=0&vv={p[vv]}&mm={p[model]}&imsi=none&rl={p[rl]}&did={p[did]}&type=4&wwan=0&wanip={p[wlanuserip]}&time={time}&sign={sign}&sysVersion=1",

@@ -35,7 +35,7 @@ message user {
 	string signature = 18;
 	int32 status = 1;
 	int64 time = 29;
-	//userstats = 20;
+	userstats = 20;
 	string uuid = 4;
 	int32 verifystate = 8;
 	string verifytitle = 9;
