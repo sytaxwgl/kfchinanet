@@ -3,17 +3,29 @@ kfchinanet是由python3编写的电信校园网认证工具。接口来自掌上
 
 
 ## 使用方法：
+
 #### 1、可执行文件
 
-下载对应平台的可执行文件，按提示使用即可。
+[release页面](https://github.com/sytaxwgl/kfchinanet/releases)下载对应平台的可执行文件，按提示使用即可。
 
 #### 2、源码
-kfchinanet 使用的开发环境为python3.5，并且调用了一些第三方模块。你可以使用pip命令安装这些模块。
+安装开发环境和包管理器(以ubuntu为例)
 ```
-pip install psutil requests pyDes protobuf
+sudo apt-get install python3 python3-pip
 ```
-如果你的系统python2和python3共存，请使用pip3代替pip。安装好相关模块之后直接运行kfchinanet.py文件即可。
+安装第三方模块
+```
+pip3 install psutil requests pyDes protobuf
+```
+运行
+```
+git clone https://github.com/sytaxwgl/kfchinanet.git
+cd kfchinanet
+python3 kfchinanet.py
+```
 
+#### 3、路由器
+敬请期待......
 
 ## 示例
 
@@ -31,3 +43,6 @@ pip install psutil requests pyDes protobuf
 
 ## 支持平台
 win10和ubuntu 18.04可以正常使用，mac未测试，不支持使用路由器。
+
+## 开发&参与
+本周内(2018/9/11)打算增加对路由器的支持， 方便参与测试或者对开发过程感兴趣的同学可以在Telegram私聊我[@TTups](https://t.me/TTups)。
