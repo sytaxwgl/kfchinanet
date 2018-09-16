@@ -3,27 +3,40 @@
 # @Author  : sytaxwgl
 
 import re
-import os
 import json
 import time
 import random
-import psutil
 import base64
 import hashlib
 import requests
+import paramiko
 from urllib import parse
 from proto import user_pb2
 from ipaddress import IPv4Address
 from pyDes import des, PAD_PKCS5, ECB
 
 with open('config.json', 'r') as f:
-    config = json.load(f)
-params = config['params']
-cpath = config['path']
-gtt = 0
-path = []
-key = ''    # 解密密钥
-user_id = 0
+    CONFIG = json.load(f)
+PARAMS = CONFIG['params']
+CPATH = CONFIG['path']
+REQUEST_TIME = 0
+PATH = []
+KEY = ''    # 解密密钥
+USER_ID = 0
+
+
+def ssh_exec():
+    with open('ssh.json', 'r') as f:
+        ssh_config = json.load(f)
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(ssh_config['host'], ssh_config['port'], ssh_config['user'], ssh_config['password'])
+    stdin, stdout, stderr = ssh.exec_command(ssh_config['ifconfig'])
+    rs = stdout.readlines()
+    stdin, stdout, stderr = ssh.exec_command("cat /proc/net/arp")
+    rs1 = stdout.readlines()
+    ssh.close()
+    return rs, rs1
 
 
 def get_net_info(uip):
@@ -32,36 +45,35 @@ def get_net_info(uip):
     :param uip: 用户ip
     :return: 键值为'netmask', 'gateway', 'routerip', 'bssid'的字典
     '''
-    values = []
-    info = psutil.net_if_addrs()
-    for k, v in info.items():
-        for item in v:
-            if item[0] == 2 and item[1] == uip:
-                values.append(item[2])
+    patt = r'(Mask:|netmask\s)((\d{1,3}\.?){4})'
+    ifconfig_res, arp_res = ssh_exec()
+    ifconfig_res = ''.join(i for i in ifconfig_res)
+    ifconfig_res = ifconfig_res.split('\n\n')
+    for i in ifconfig_res:
+        if i.find(uip) != -1:
+            netmask = re.search(patt, i).group(2)
 
-    tmp = int(IPv4Address(uip)) & int(IPv4Address(values[0]))
+    tmp = int(IPv4Address(uip)) & int(IPv4Address(netmask))
     gateway = IPv4Address(tmp)
     gateway = str(IPv4Address(gateway) + 1)
-    values.append(gateway)
-    values.append(gateway)
 
-    for line in os.popen('arp -a'):
+    for line in arp_res:
         if line.find(gateway) != -1:
             patt = r'([0-9a-f]{2}[:-]){5}[0-9a-f]{2}'
             bssid = re.search(patt, line)
             bssid = '' if bssid is None else bssid.group(0).replace(':', '-')
 
-    values.append(bssid)
-    keys = ['netmask', 'gateway', 'routerip', 'bssid']
+    values = [netmask, gateway, bssid, gateway]
+    keys = ['netmask', 'gateway', 'bssid', 'routerip']
     net_info = {k: v for k, v in zip(keys, values)}
     return net_info
 
 
 def generate_did():
-    '''
+    """
     生成随机的server_did 和did，无实际意义
     :return: did和server_did的字典类型
-    '''
+    """
     ram_str1 = get_md5(str(time.time()))
     ram_str2 = ram_str1[0:16]
     sdid = ram_str1[0:8] + '-' + ram_str1[8:12] + '-' + ram_str1[12:16] + '-' + ram_str1[16:20] + '-' + ram_str1[20:]
@@ -78,17 +90,17 @@ def initial():
     初始化config配置信息
     :return: 无
     """
-    if config['params']['did'] == '':  # 初始化did,server_did以及帐号和密码
+    if CONFIG['params']['did'] == '':  # 初始化did,server_did以及帐号和密码
         ram_did = generate_did()
-        params.update(ram_did)
+        PARAMS.update(ram_did)
         account = input('请输入帐号：')
         pwd = input('请输入密码：')
-        params['mobile'] = account
-        params['password'] = pwd
+        PARAMS['mobile'] = account
+        PARAMS['password'] = pwd
 
-    account = params['mobile'] + ':' + params['password']
+    account = PARAMS['mobile'] + ':' + PARAMS['password']
     auth = base64.b64encode(account.encode())
-    config['header']['Authorization'] = 'Basic %s' % auth.decode()
+    CONFIG['header']['Authorization'] = 'Basic %s' % auth.decode()
 
     res = test_network()
 
@@ -100,11 +112,11 @@ def initial():
             net_info.update({k: v[0]})
         net_info2 = get_net_info(net_info['wlanuserip'])
         net_info.update(net_info2)
-        params.update(net_info)
-        config['params'].update(params)
+        PARAMS.update(net_info)
+        CONFIG['params'].update(PARAMS)
 
     with open('config.json', 'w') as f:
-        json.dump(config, f, indent=4)
+        json.dump(CONFIG, f, indent=4)
 
 
 def test_network():
@@ -123,7 +135,7 @@ def des_descrypt(s):
     :param s: 加密后的字符串(二进制)
     :return:  解密后的字符串
     """
-    k = des(key, ECB, IV=None, pad=None, padmode=PAD_PKCS5)
+    k = des(KEY, ECB, IV=None, pad=None, padmode=PAD_PKCS5)
     de = k.decrypt(s, padmode=PAD_PKCS5)
     de = de.decode()
     return de
@@ -134,9 +146,9 @@ def login_chinanet():
     登录
     :return: 用户id
     """
-    header = config['header']
-    url = config['login_url']
-    url = url.format(p=params)
+    header = CONFIG['header']
+    url = CONFIG['login_url']
+    url = url.format(p=PARAMS)
     try:
         res = requests.get(url, headers=header)
     except requests.exceptions.ConnectionError:
@@ -179,25 +191,25 @@ def get_sign(ipath):
     :param ipath:
     :return:
     '''
-    global gtt, key
-    appsign = config['appSign64']
-    raw_str = config['unsign_str']
+    global REQUEST_TIME, KEY
+    appsign = CONFIG['appSign64']
+    raw_str = CONFIG['unsign_str']
     tt = int(time.time() * 1000)
-    gtt = tt
+    REQUEST_TIME = tt
     sub_appsign = get_sub_appsign(appsign, tt)
-    key = sub_appsign[0:8]
-    spath = path[ipath]
+    KEY = sub_appsign[0:8]
+    spath = PATH[ipath]
     ttype = {3: 7, 4: 11}.get(ipath, 4)
-    raw_str = raw_str.format(p=params, type=ttype, path=spath, time=tt, sub_app_sign=sub_appsign)
+    raw_str = raw_str.format(p=PARAMS, type=ttype, path=spath, time=tt, sub_app_sign=sub_appsign)
     md5_sign = get_md5(raw_str)
     md5_sign = md5_sign.upper()
     return md5_sign
 
 
 def do_request(url, ipath, qrcode=None, pwd=None):
-    header = config['header']
+    header = CONFIG['header']
     md5 = get_sign(ipath)
-    url = url.format(p=params, time=gtt, sign=md5, qrcode=qrcode, pwd=pwd)
+    url = url.format(p=PARAMS, time=REQUEST_TIME, sign=md5, qrcode=qrcode, pwd=pwd)
 
     if ipath == 0 or ipath == 2:
         rrequest = requests.post
@@ -223,7 +235,7 @@ def do_request(url, ipath, qrcode=None, pwd=None):
 
 
 def get_qrcode():
-    qr_url = 'https://' + config['host'] + path[0] + '?' + config['qr_params']
+    qr_url = 'https://' + CONFIG['host'] + PATH[0] + '?' + CONFIG['qr_params']
     res_json = do_request(qr_url, 0)
     hiwf = res_json['response']
     print(hiwf)
@@ -231,7 +243,7 @@ def get_qrcode():
 
 
 def get_pwd():
-    pwd_url = 'https://' + config['host'] + path[1] + '?' + config['pwd_params']
+    pwd_url = 'https://' + CONFIG['host'] + PATH[1] + '?' + CONFIG['pwd_params']
     res_json = do_request(pwd_url, 1)
     pwd = res_json['response']
     print(pwd)
@@ -239,14 +251,14 @@ def get_pwd():
 
 
 def online(qrcode, pwd):
-    online_url = 'https://' + config['host'] + path[2] + '?' + config['oline_params']
+    online_url = 'https://' + CONFIG['host'] + PATH[2] + '?' + CONFIG['oline_params']
     res_json = do_request(online_url, 2, qrcode, pwd)
     print('login successfully!')
     return res_json
 
 
 def list_devices():
-    status_url = 'https://' + config['host'] + path[3] + '?' + config['status_params']
+    status_url = 'https://' + CONFIG['host'] + PATH[3] + '?' + CONFIG['status_params']
     res_json = do_request(status_url, 3)
     return res_json
 
@@ -255,20 +267,23 @@ def kick_off():
     dev_list = list_devices()['onlines']
     for i in range(0, len(dev_list)):
         print('%d、%s  %s' % (i, dev_list[i]['device'], dev_list[i]['time']))
-    option = 0 if len(dev_list) == 1 else input('请选择下线设备：')
+    dev_num = len(dev_list)
+    if dev_num == 0:
+        return
+    option = 0 if dev_num == 1 else input('请选择下线设备：')
     dev = dev_list[option]
     hiwf = dev['id']
-    params.update({'wanip': dev['wanIp'], 'brasip': dev['brasIp']})
+    PARAMS.update({'wanip': dev['wanIp'], 'brasip': dev['brasIp']})
 
-    kick_url = 'https://' + config['host'] + path[4] + '?' + config['kick_params']
+    kick_url = 'https://' + CONFIG['host'] + PATH[4] + '?' + CONFIG['kick_params']
     res_json = do_request(kick_url, 4, qrcode=hiwf)
     print('logout successfully!\n')
 
 
 if __name__ == '__main__':
     initial()
-    user_id = login_chinanet()
-    path = [i.format(user_id=user_id) for i in cpath]
+    USER_ID = login_chinanet()
+    PATH = [i.format(user_id=USER_ID) for i in CPATH]
     info = '1、上线\n2、在线设备\n3、下线\n0、退出\n\n'
 
     while True:
