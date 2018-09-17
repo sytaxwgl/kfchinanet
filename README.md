@@ -25,7 +25,24 @@ python3 kfchinanet.py
 ```
 
 #### 3、路由器
-敬请期待......
+
+###### 通用版
+路由器的使用有点麻烦，每次使用都需要在`config.json`中手动填入wan口的参数
+```
+netmask：网络掩码
+gateway：网关
+routerip：路由ip，与gateway相同
+bssid：网关mac(以"-"相连，如"ff:ff:ff:ff:ff:ff"应改为"ff-ff-ff-ff-ff-ff")
+```
+这些参数可以在路由器的web管理界面查看，或者ssh到路由器分别通过`ifconfig`和`arp -a`命令查看。
+配置好之后电脑连上wifi，运行kfchinanet即可。
+
+这里提供一个偷懒的方法，先把网线插电脑上，上线再下线，然后把网线插到路由器，电脑连wifi，上线。
+**每次使用请务必确保config.json中的相关参数与路由器wan口一致。**
+
+###### openwrt专用版
+
+推荐openwrt或其他支持ssh的路由器使用这个版本[openwrt专用版](https://github.com/sytaxwgl/kfchinanet/tree/openwrt)
 
 ## 示例
 
@@ -41,8 +58,3 @@ python3 kfchinanet.py
 
 ![下线](https://i.loli.net/2018/08/16/5b752096d4a87.png)
 
-## 支持平台
-win10和ubuntu 18.04可以正常使用，mac未测试，不支持使用路由器。
-
-## 开发&参与
-本周内(2018/9/11)打算增加对路由器的支持， 方便参与测试或者对开发过程感兴趣的同学可以在Telegram私聊我[@TTups](https://t.me/TTups)。
